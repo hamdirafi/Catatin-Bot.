@@ -23,7 +23,10 @@ class TelegramWebhookController extends Controller
         $chatId = $message['chat']['id'];
         $text = trim($message['text'] ?? '');
 
-        // Daftar Perintah Bot
+        if ($text === '/halo') {
+            $this->sendWelcomeMessage($chatId, $message);
+            return response()->json(['status' => 'ok']);
+        }
         if ($text === '/rekap' || $text === '/bulanini') {
             $this->sendMonthlyRecap($chatId);
             return response()->json(['status' => 'ok']);
@@ -337,6 +340,34 @@ class TelegramWebhookController extends Controller
         Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chatId,
             'text' => $message,
+        ]);
+    }
+
+    private function sendWelcomeMessage($chatId, $message)
+    {
+        $firstName = $message['from']['first_name'] ?? 'Sobat';
+
+        $welcomeText = "Halo, *{$firstName}*! 👋 Selamat datang di *Catatin-Bot*.\n\n" .
+                       "Asisten virtual pribadimu untuk mencatat keuangan harian mahasiswa dengan mudah dan praktis langsung dari Telegram.\n\n" .
+                       "💡 *Cara Penggunaan:*\n" .
+                       "• Catat pengeluaran: `makan nasi 15000` atau `print tugas 5rb`\n" .
+                       "• Catat pemasukan: `terima gaji 500000` atau `dapat kiriman 300k`\n\n" .
+                       "📊 *Perintah Cepat:*\n" .
+                       "• /halo - Menampilkan pesan sambutan ini\n" .
+                       "• /saldo - Cek total pemasukan, pengeluaran & sisa saldo\n" .
+                       "• /umum atau /kategori - Rekap pengeluaran per kategori\n" .
+                       "• /bulanini - Rekap pengeluaran bulan ini\n" .
+                       "• /hariini - Rekap pengeluaran hari ini\n" .
+                       "• /pemasukan - Rekap pemasukan bulan ini\n" .
+                       "• /hapus - Membatalkan transaksi terakhir\n" .
+                       "• /help - Menampilkan daftar lengkap bantuan\n\n" .
+                       "Yuk, mulai catat keuanganmu sekarang! 🚀";
+
+        $token = env('TELEGRAM_BOT_TOKEN');
+        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+            'chat_id' => $chatId,
+            'text' => $welcomeText,
+            'parse_mode' => 'Markdown',
         ]);
     }
 }
